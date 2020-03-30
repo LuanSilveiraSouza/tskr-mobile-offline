@@ -9,6 +9,7 @@ import {View,
         Platform} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
+import AsyncStorage from '@react-native-community/async-storage';
 import moment from 'moment';
 import 'moment/locale/pt-br';
 
@@ -21,38 +22,14 @@ import imgToday from '../../assets/imgs/today.jpg';
 export default function TaskList() {
   const today = moment().locale('pt-br').format('ddd, D [de] MMMM');
 
-  const [tasks, setTasks] = useState([
-    {
-      id: Math.random(),
-      description: 'Ir ao cinema',
-      estimateAt: new Date(),
-      doneAt: new Date(),
-    },
-    {
-      id: Math.random(),
-      description: 'Ir ao shopping',
-      estimateAt: new Date(),
-      doneAt: null,
-    },
-    {
-      id: Math.random(),
-      description: 'Ler Livro',
-      estimateAt: new Date(),
-      doneAt: null,
-    },
-    {
-      id: Math.random(),
-      description: 'Fazer Bolo',
-      estimateAt: new Date(),
-      doneAt: null,
-    },
-  ]);
+  const [tasks, setTasks] = useState([]);
 
   const [visibleTasks, setVisibleTasks] = useState([]);
 
   const [showDoneTasks, setShowDoneTasks] = useState(true);
 
   const [showAddTask, setShowAddTask] = useState(false);
+
 
   function toggleTask (taskId) {
     const newTasks = [...tasks];
@@ -69,6 +46,15 @@ export default function TaskList() {
   }
 
   useEffect(() => {
+    async function getData() {
+      const stateString = await AsyncStorage.getItem('tasks');
+      const state = JSON.parse(stateString) || [];
+      setTasks(state);
+    }
+    getData();
+  }, []);
+
+  useEffect(() => {
     const filterTasks = () => {
       let newTasks = null;
       if (showDoneTasks) {
@@ -78,6 +64,7 @@ export default function TaskList() {
         newTasks = tasks.filter(pending);
       }
       setVisibleTasks(newTasks);
+      AsyncStorage.setItem('tasks', JSON.stringify(tasks));
     };
     filterTasks();
   }, [showDoneTasks, tasks]);
