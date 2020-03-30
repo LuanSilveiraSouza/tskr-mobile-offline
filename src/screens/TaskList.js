@@ -5,6 +5,7 @@ import {View,
         StyleSheet,
         FlatList,
         TouchableOpacity,
+        Alert,
         Platform} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -12,6 +13,7 @@ import moment from 'moment';
 import 'moment/locale/pt-br';
 
 import Task from '../components/Task';
+import AddTask from './AddTask';
 
 import globalStyles from '../globalStyles';
 import imgToday from '../../assets/imgs/today.jpg';
@@ -48,7 +50,9 @@ export default function TaskList() {
 
   const [visibleTasks, setVisibleTasks] = useState([]);
 
-  const [showDoneTasks, setShowDoneTasks] = useState(false);
+  const [showDoneTasks, setShowDoneTasks] = useState(true);
+
+  const [showAddTask, setShowAddTask] = useState(false);
 
   function toggleTask (taskId) {
     const newTasks = [...tasks];
@@ -78,8 +82,31 @@ export default function TaskList() {
     filterTasks();
   }, [showDoneTasks, tasks]);
 
+  function addTask(newTask) {
+    if (!newTask.description || !newTask.description.trim()) {
+      Alert.alert('Dados Inválidos', 'Descrição não informada');
+      return;
+    }
+
+    const tasksClone = [...tasks];
+    tasksClone.push({
+      id: Math.random(),
+      description: newTask.description,
+      estimateAt: newTask.date,
+      doneAt: null,
+    });
+
+    setTasks(tasksClone);
+    setShowAddTask(false);
+  }
+
   return (
     <View style={styles.container}>
+      <AddTask
+        isVisible={showAddTask}
+        onCancel={() => setShowAddTask(false)}
+        onSave={addTask}/>
+
       <ImageBackground
         source={imgToday}
         style={styles.background}>
@@ -103,6 +130,14 @@ export default function TaskList() {
           keyExtractor={item => `${item.id}`}
           renderItem={({item}) => <Task toggleTask={toggleTask} {...item}/>}/>
       </View>
+
+      <TouchableOpacity style={styles.addButton}
+        onPress={() => setShowAddTask(true)}
+        activeOpacity={0.7}>
+        <Icon name="plus"
+          size={20}
+          color={globalStyles.colors.secundary} />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -140,5 +175,16 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     marginHorizontal: 20,
     marginTop: Platform.OS === 'ios' ? 50 : 10,
+  },
+  addButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: globalStyles.colors.today,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
