@@ -1,9 +1,13 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {View,
         Text,
         ImageBackground,
         StyleSheet,
-        FlatList,} from 'react-native';
+        FlatList,
+        TouchableOpacity,
+        Platform} from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
+
 import moment from 'moment';
 import 'moment/locale/pt-br';
 
@@ -42,6 +46,10 @@ export default function TaskList() {
     },
   ]);
 
+  const [visibleTasks, setVisibleTasks] = useState([]);
+
+  const [showDoneTasks, setShowDoneTasks] = useState(false);
+
   function toggleTask (taskId) {
     const newTasks = [...tasks];
     newTasks.forEach(task => {
@@ -52,11 +60,38 @@ export default function TaskList() {
     setTasks(newTasks);
   }
 
+  function toggleFilter () {
+    setShowDoneTasks(!showDoneTasks);
+  }
+
+  useEffect(() => {
+    const filterTasks = () => {
+      let newTasks = null;
+      if (showDoneTasks) {
+        newTasks = [...tasks];
+      } else {
+        const pending = task => task.doneAt === null;
+        newTasks = tasks.filter(pending);
+      }
+      setVisibleTasks(newTasks);
+    };
+    filterTasks();
+  }, [showDoneTasks, tasks]);
+
   return (
     <View style={styles.container}>
       <ImageBackground
         source={imgToday}
         style={styles.background}>
+        <View style={styles.iconBar}>
+          <TouchableOpacity onPress={toggleFilter}>
+            <Icon
+              name={showDoneTasks ? 'eye' : 'eye-slash'}
+              size={30}
+              color={globalStyles.colors.secundary}/>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.titleBar}>
           <Text style={styles.title}>Hoje</Text>
           <Text style={styles.subTitle}>{today}</Text>
@@ -64,7 +99,7 @@ export default function TaskList() {
       </ImageBackground>
 
       <View style={styles.taskList}>
-        <FlatList data={tasks}
+        <FlatList data={visibleTasks}
           keyExtractor={item => `${item.id}`}
           renderItem={({item}) => <Task toggleTask={toggleTask} {...item}/>}/>
       </View>
@@ -99,5 +134,11 @@ const styles = StyleSheet.create({
     color: globalStyles.colors.secundary,
     marginLeft: 20,
     marginBottom: 30,
+  },
+  iconBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginHorizontal: 20,
+    marginTop: Platform.OS === 'ios' ? 50 : 10,
   },
 });
