@@ -100,6 +100,11 @@ export default function TaskList() {
     setShowAddTask(false);
   }
 
+  function deleteTask(id) {
+    const tasksClone = tasks.filter(task => task.id !== id);
+    setTasks(tasksClone);
+  }
+
   return (
     <View style={styles.container}>
       <AddTask
@@ -128,7 +133,11 @@ export default function TaskList() {
       <View style={styles.taskList}>
         <FlatList data={visibleTasks}
           keyExtractor={item => `${item.id}`}
-          renderItem={({item}) => <Task toggleTask={toggleTask} {...item}/>}/>
+          renderItem={({item}) =>
+          <Task
+            toggleTask={toggleTask}
+            onDelete={deleteTask}
+            {...item}/>}/>
       </View>
 
       <TouchableOpacity style={styles.addButton}
